@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2D Maze Math Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f8ff;
+    }
+    #game-container {
+      display: grid;
+      grid-template-columns: repeat(5, 50px);
+      grid-template-rows: repeat(5, 50px);
+      gap: 5px;
+    }
+    .cell {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid #ccc;
+      background-color: #fff;
+    }
+    .wall {
+      background-color: #333;
+    }
+    .player {
+      background-color: #4caf50;
+      color: #fff;
+    }
+    .goal {
+      background-color: #ff5722;
+      color: #fff;
+    }
+    #question {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <div id="game-container"></div>
+    <div id="question">
+      <p>Solve this to move: <span id="problem"></span></p>
+      <input type="number" id="answer" placeholder="Your answer">
+      <button onclick="submitAnswer()">Submit</button>
+    </div>
+  </div>
+
+  <script>
+    const maze = [
+      ["P", "", "W", "", ""],
+      ["", "W", "", "W", ""],
+      ["", "", "", "", "G"],
+      ["W", "W", "W", "", "W"],
+      ["", "", "", "", ""]
+    ];
+
+    const gameContainer = document.getElementById('game-container');
+    const problemElement = document.getElementById('problem');
+    const answerInput = document.getElementById('answer');
+
+    let playerPosition = { x: 0, y: 0 };
+
+    function renderMaze() {
+      gameContainer.innerHTML = '';
+      maze.forEach((row, y) => {
+        row.forEach((cell, x) => {
+          const div = document.createElement('div');
+          div.className = 'cell';
+
+          if (cell === 'W') div.classList.add('wall');
+          if (cell === 'P') div.classList.add('player');
+          if (cell === 'G') div.classList.add('goal');
+
+          gameContainer.appendChild(div);
+        });
+      });
+    }
+
+    function generateProblem() {
+      const a = Math.floor(Math.random() * 10) + 1;
+      const b = Math.floor(Math.random() * 10) + 1;
+      const operators = ['+', '-', '*', '/'];
+      const operator = operators[Math.floor(Math.random() * operators.length)];
+
+      let problem;
+      let solution;
+
+      switch (operator) {
+        case '+':
+          problem = `${a} + ${b}`;
+          solution = a + b;
+          break;
+        case '-':
+          problem = `${a} - ${b}`;
+          solution = a - b;
+          break;
+        case '*':
+          problem = `${a} * ${b}`;
+          solution = a * b;
+          break;
+        case '/':
+          problem = `${a * b} / ${b}`;
+          solution = a;
+          break;
+      }
+
+      problemElement.textContent = problem;
+      return solution;
+    }
+
+    let currentSolution = generateProblem();
+
+    function movePlayer(newX, newY) {
+      if (
+        newX < 0 ||
+        newY < 0 ||
+        newX >= maze[0].length ||
+        newY >= maze.length ||
+        maze[newY][newX] === 'W'
+      ) {
+        alert('You hit a wall or went out of bounds!');
+        return;
+      }
+
+      maze[playerPosition.y][playerPosition.x] = '';
+      playerPosition = { x: newX, y: newY };
+      maze[newY][newX] = 'P';
+
+      renderMaze();
+
+      if (maze[newY][newX] === 'G') {
+        alert('You reached the goal!');
+      } else {
+        currentSolution = generateProblem();
+      }
+    }
+
+    function submitAnswer() {
+      const answer = Number(answerInput.value);
+      if (answer === currentSolution) {
+        const direction = prompt('Where do you want to move? (up, down, left, right)');
+        switch (direction) {
+          case 'up':
+            movePlayer(playerPosition.x, playerPosition.y - 1);
+            break;
+          case 'down':
+            movePlayer(playerPosition.x, playerPosition.y + 1);
+            break;
+          case 'left':
+            movePlayer(playerPosition.x - 1, playerPosition.y);
+            break;
+          case 'right':
+            movePlayer(playerPosition.x + 1, playerPosition.y);
+            break;
+          default:
+            alert('Invalid direction!');
+        }
+      } else {
+        alert('Incorrect answer. Try again!');
+      }
+
+      answerInput.value = '';
+    }
+
+    renderMaze();
+  </script>
+</body>
+</html>
